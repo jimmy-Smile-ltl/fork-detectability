@@ -114,6 +114,9 @@ def main() -> int:
     ap.add_argument("--dims", default="", help="逗号分隔；空=全部 8 个")
     ap.add_argument("--workers", type=int, default=32)
     ap.add_argument("--limit", type=int, default=0, help="只采前 N 人（0=全部）")
+    ap.add_argument("--sample", type=int, default=0,
+                    help="随机抽 N 人（固定种子 42，可复现；与 --limit 互斥）")
+    ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--list-only", action="store_true")
     ap.add_argument("--year", type=int, default=2026)
     ap.add_argument("--no-proxy", action="store_true")
@@ -162,8 +165,14 @@ def main() -> int:
 
     if args.list_only:
         return 0
-    if args.limit:
+    if args.sample:
+        import random
+        rnd = random.Random(args.seed)
+        logins = sorted(rnd.sample(logins, min(args.sample, len(logins))))
+        print(f"随机采样 {len(logins):,} 人（seed={args.seed}，可复现）", flush=True)
+    elif args.limit:
         logins = logins[: args.limit]
+        print(f"按名单顺序取前 {len(logins):,} 人", flush=True)
 
     dims = [d.strip() for d in args.dims.split(",") if d.strip()] or \
         F.ORDER_PER_ACCOUNT

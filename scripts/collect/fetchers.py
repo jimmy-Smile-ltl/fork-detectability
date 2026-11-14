@@ -417,7 +417,49 @@ def _d15(login: str, ctx: Ctx):
     return Outcome.OK, p, 200, ""
 
 
-_HANDLERS = {"D1": _d1, "D2": _d2, "D4L": _d4l, "D8H": _d8h,
+def _d2b(login: str, ctx: Ctx):
+    """D2B：API `/events/public` 取近 90 天事件（D13 的可靠替代）。
+
+    D13 走 github.com HTML，会被软封；本维度纯 API，稳定。
+    产出：90 天内的活跃天数、事件总数、开发事件占比、事件类型分布。
+    """
+    days: dict[str, int] = {}
+    types: dict[str, int] = {}
+    n = 0
+    for page in range(1, 4):                      # 最多 300 条事件
+        r = cffi.get(f"{API}/users/{login}/events/public",
+                     params={"per_page": 100, "page": page},
+                     headers=_api_headers(), proxies=ctx.proxies,
+                     timeout=ctx.timeout, impersonate="chrome")
+        if r.status_code == 404:
+            return Outcome.DELETED, {}, 404, "events 404"
+        if r.status_code != 200:
+            if page == 1:
+                return classify_http(r.status_code), {}, r.status_code, ""
+            break
+        batch = r.json() or []
+        for it in batch:
+            if not isinstance(it, dict):
+                continue
+            n += 1
+            d = (it.get("created_at") or "")[:10]
+            if d:
+                days[d] = days.get(d, 0) + 1
+            t = (it.get("type") or "").replace("Event", "").lower()
+            types[t] = types.get(t, 0) + 1
+        if len(batch) < 100:
+            break
+        time.sleep(0.05)
+    dev = types.get("push", 0) + types.get("pullrequest", 0) +         types.get("pullrequestreview", 0)
+    p = {"active_days_90d": len(days), "events_n_90d": n,
+         "event_types": types, "dev_events": dev,
+         "dev_event_ratio": round(dev / n, 3) if n else None,
+         "first_day": min(days) if days else None,
+         "last_day": max(days) if days else None}
+    return (Outcome.OK if n else Outcome.EMPTY), p, 200, ""
+
+
+_HANDLERS = {"D1": _d1, "D2": _d2, "D2B": _d2b, "D4L": _d4l, "D8H": _d8h,
              "D9": _d9, "D13": _d13, "D14": _d14, "D15": _d15}
 
 

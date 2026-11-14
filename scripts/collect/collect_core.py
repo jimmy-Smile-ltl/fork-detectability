@@ -243,6 +243,8 @@ DIMS: dict[str, DimSpec] = {
                    "heat_{tag}_all.jsonl", "/users/{login}/contributions"),
     "D14": DimSpec("D14", "头像类型",     "cdn",  False, 1,
                    "avatar_{tag}.jsonl", "avatars HEAD，按字节判"),
+    "D2B": DimSpec("D2B", "90天活动(API)", "api",  True, 3,
+                   "events90_{tag}.jsonl", "/events/public，D13 的 API 替代"),
     "D15": DimSpec("D15", "主页画像",     "html", False, 1,
                    "profile_html_{tag}.jsonl", "/{login}，一次拿 7 字段"),
 }

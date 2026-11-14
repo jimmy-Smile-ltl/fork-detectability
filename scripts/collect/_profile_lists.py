@@ -41,7 +41,7 @@ API = "https://api.github.com"
 H_JSON = {"Accept": "application/vnd.github+json",
           "User-Agent": "fork-study/1.0", "Connection": "close"}
 H_STAR = {**H_JSON, "Accept": "application/vnd.github.star+json"}
-MAX_PAGES = 100          # 硬保护：单列表最多 1 万条
+MAX_PAGES = 20           # 单列表上限 20 页 = 2,000 条（保留 94% 数据，只多花 4.6% 请求）
 
 
 def load_tunnel() -> dict:
@@ -80,9 +80,16 @@ def has_next(r) -> bool:
     return 'rel="next"' in (r.headers.get("Link") or "")
 
 
+def _last_page(r) -> int:
+    """从 Link 头解析最后一页页码（用于估算真实总数）。"""
+    m = re.search(r'[?&]page=(\d+)>; rel="last"', r.headers.get("Link") or "")
+    return int(m.group(1)) if m else 0
+
+
 def fetch_starred(login: str, proxies: dict) -> dict:
-    """全部分页的 star 列表。"""
+    """star 列表：最多 MAX_PAGES 页，**记录真实总数与是否截断**。"""
     items, page, t0 = [], 1, time.time()
+    total_pages = 0
     while page <= MAX_PAGES:
         r = get(f"{API}/users/{login}/starred", H_STAR, proxies,
                 {"per_page": 100, "page": page})
@@ -109,12 +116,21 @@ def fetch_starred(login: str, proxies: dict) -> dict:
                     "lang": rp.get("language"),
                     "fork": rp.get("fork"),
                 })
+        total_pages = max(total_pages, _last_page(r))
         if not has_next(r) or not batch:
             break
         page += 1
-        time.sleep(0.05)
+        # 深层翻页更容易触发 GitHub 二级限流：越深间隔越大
+        time.sleep(0.15 if page <= 5 else 0.45)
+    truncated = bool(has_next(r)) if page > MAX_PAGES else False
+    if page > MAX_PAGES:
+        truncated = True
+    # 真实总数的估计：最后一页 × 100（仅在完整时精确）
+    starred_total = (total_pages * 100) if total_pages else len(items)
     return {"login": login, "outcome": "OK" if items else "EMPTY",
-            "n_pages": page, "n_items": len(items), "complete": True,
+            "n_pages": min(page, MAX_PAGES), "n_items": len(items),
+            "complete": not truncated, "truncated": truncated,
+            "starred_total_est": starred_total if truncated else len(items),
             "elapsed_s": round(time.time() - t0, 2), "items": items}
 
 
@@ -153,7 +169,7 @@ def fetch_repos(login: str, proxies: dict) -> dict:
         if not has_next(r) or not batch:
             break
         page += 1
-        time.sleep(0.05)
+        time.sleep(0.15 if page <= 5 else 0.45)
     own = sum(1 for x in items if not x["fork"])
     forks = len(items) - own
     return {"login": login, "outcome": "OK" if items else "EMPTY",

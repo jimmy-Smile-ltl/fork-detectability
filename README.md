@@ -124,6 +124,37 @@ python scripts/figures/_plot_fork_timeline.py
 
 ---
 
+## 为什么只能研究 fork：三种名单的权限差异
+
+这是本项目最容易被误解的一点，**包含一次自我更正**。
+
+| 名单 | 端点 | 匿名（无 token） | **有 token（非所有者）** | 仓库所有者 | 能拿到的时间戳 |
+|---|---|---|:---:|---|---|
+| **fork** | `/repos/{o}/{r}/forks` | ✅ **200** | ✅ 200 | ✅ | fork 时间 + 最后 push |
+| **star** | `/repos/{o}/{r}/stargazers` | ❌ **401** | ✅ **200** | ✅ | `starred_at` |
+| **watch** | `/repos/{o}/{r}/subscribers` | ❌ **401** | ⚠️ 预期 200 | ✅ | 无 |
+
+匿名请求 star 名单的实际返回（2026-11-14 实测）：
+
+```
+HTTP 401  {"message":"Requires authentication"}
+X-RateLimit-Remaining: 59          ← 不是限流，是认证要求
+```
+
+> ⚠️ **本项目 2026-11-10 的旧文档曾写"star 名单仅仓库所有者可读（404）"，那是错的。**
+> 真实机制是"**需要认证**"——任何账号的 token 都能拉，不要求是所有者。
+> 所以 [`aegiswizard/fortune`](https://github.com/aegiswizard/fortune) 这类工具是可行的
+> （它要求用户提供 `GITHUB_TOKEN`）。
+> **本项目不取 star 名单，是因为承诺匿名只读，不是因为没权限。**
+
+| 配额 | 匿名 | 有 token |
+|---|---:|---:|
+| 每小时 | 60 次/IP | **5,000 次/token** |
+| 拉 43 万 star 名单耗时 | 不可能（401） | ≈ 1 小时 |
+
+**如果放宽"不用 token"这条纪律，star 侧（43 万条）就能做**——
+但本项目选择不做，并在报告里声明"结论仅覆盖 fork 侧"。
+
 ## 九个数据维度
 
 | 维度 | 内容 | 获取方式 | 请求/人 | 覆盖率（rea / oc） |

@@ -169,14 +169,14 @@ class Writer:
         """启动时把已有文件读进内存（**必须做，否则会重复采**）。"""
         if not os.path.exists(self.path):
             return
-        for line in open(self.path, encoding="utf-8"):
+        for line in open(self.path, encoding="utf-8", errors="replace"):
             line = line.strip()
             if not line:
                 continue
             try:
                 r = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue   # 半行/坏行：跳过即可，下一轮会重采
             lg = (r.get("login") or "").lower()
             if not lg:
                 continue
@@ -264,12 +264,15 @@ class Collector:
     """
 
     def __init__(self, tag: str, out_dir: str = "data/raw",
-                 fetch: Optional[Callable] = None, max_retry: int = 4):
+                 fetch: Optional[Callable] = None, max_retry: int = 4,
+                 dims: Optional[list[str]] = None):
         self.tag = tag
         self.out_dir = out_dir
         self.fetch = fetch or (lambda dim, login: (Outcome.NETWORK, {}, None, ""))
         self.max_retry = max_retry
-        self.writers = {d: Writer(dim_path(d, tag, out_dir)) for d in DIMS}
+        # 只加载用到的维度：大盘文件不必读，也避免与其它进程并发读
+        use = dims or list(DIMS)
+        self.writers = {d: Writer(dim_path(d, tag, out_dir)) for d in use}
 
     # -- 单个 (维度, 账号) 的采集单元：重试逻辑只写一次 ----------------------
     def _unit(self, dim: str, login: str) -> Record:
@@ -345,8 +348,8 @@ def load_account(tag: str, login: str, out_dir: str = "data/raw") -> dict:
         for line in open(path, encoding="utf-8"):
             try:
                 r = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue   # 半行/坏行：跳过即可，下一轮会重采
             if (r.get("login") or "").lower() != lg:
                 continue
             oc = r.get("outcome") or legacy_to_outcome(r).value

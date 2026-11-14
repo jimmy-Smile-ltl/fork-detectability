@@ -118,6 +118,8 @@ def main() -> int:
     ap.add_argument("--year", type=int, default=2026)
     ap.add_argument("--no-proxy", action="store_true")
     ap.add_argument("--deep-star", action="store_true")
+    ap.add_argument("--max-minutes", type=float, default=0,
+                    help="到点主动退出（0=不限）；配合外层定时重启可绕开卡死线程")
     args = ap.parse_args()
 
     owner, repo = args.repo.split("/", 1)
@@ -165,13 +167,14 @@ def main() -> int:
 
     dims = [d.strip() for d in args.dims.split(",") if d.strip()] or \
         F.ORDER_PER_ACCOUNT
+    _ = dims  # 提前定义，Collector 只加载这些维度
 
     # ---- 2) 采详情 ----
     # 本机直连 github.com 不可用（被墙），HTML 与 API 都走隧道；
     # 若你的环境能直连 github.com，把 proxies_html 改成 {} 可显著提速。
     ctx = F.Ctx(year=args.year, proxies=proxies, proxies_html=proxies,
                 timeout=15, deep_star=args.deep_star)
-    col = Collector(tag=tag, out_dir=RAW,
+    col = Collector(tag=tag, out_dir=RAW, dims=dims,
                     fetch=lambda dim, login: F.fetch(dim, login, ctx))
     t0 = time.time()
     done = {"n": 0}
@@ -215,7 +218,11 @@ def main() -> int:
                 uid_map[(r.get("login") or "").lower()] = p["user_id"]
     ctx.known_user_id = uid_map
 
+    deadline = (time.time() + args.max_minutes * 60) if args.max_minutes else 0
+
     def one_account2(lg: str) -> None:
+        if deadline and time.time() > deadline:
+            return
         nonlocal_done = None
         for dim in dims:
             w = col.writers[dim]

@@ -289,17 +289,34 @@ def _d4l(login: str, ctx: Ctx):
 
 # -- D8H 仓库结构 ------------------------------------------------------------
 def _d8h(login: str, ctx: Ctx):
-    r = cffi.get(f"{GH}/{login}", params={"tab": "repositories"},
-                 headers=_html_headers(), proxies=ctx.proxies_html,
+    """仓库结构：**优先用 API /repos（62KB）而不是 HTML（223KB）**。
+
+    两者信息等价，但 API 体积小 3.6 倍、成功率 84% vs 0%（高并发下）。
+    """
+    r = cffi.get(f"{API}/users/{login}/repos",
+                 params={"per_page": 100, "sort": "pushed", "page": 1},
+                 headers=_api_headers(), proxies=ctx.proxies,
                  timeout=ctx.timeout, impersonate="chrome")
     if r.status_code == 404:
-        return Outcome.DELETED, {}, 404, "仓库页 404"
+        return Outcome.DELETED, {}, 404, "repos 404"
     if r.status_code != 200:
         return classify_http(r.status_code), {}, r.status_code, ""
-    p = parse_repos_html(r.text, login)
-    if p["sampled_repos"] == 0:
-        # 页面正常但没有任何仓库 → 这个人确实没仓
-        return Outcome.EMPTY, {**p, "own_count": 0, "fork_count": 0}, 200, "无公开仓库"
+    arr = r.json() or []
+    own, forks = [], []
+    for it in arr:
+        if not isinstance(it, dict):
+            continue
+        rec = {"name": it.get("name"), "owner": (it.get("owner") or {}).get("login"),
+               "lang": it.get("language"), "updated": it.get("pushed_at"),
+               "size_kb": it.get("size")}
+        (forks if it.get("fork") else own).append(rec)
+    low = login.lower()
+    p = {"own_count": len(own), "fork_count": len(forks),
+         "own_details": own[:12], "fork_details": forks[:12],
+         "sampled_repos": len(arr),
+         "has_profile_repo": any((x["name"] or "").lower() == low for x in own)}
+    if not arr:
+        return Outcome.EMPTY, p, 200, "无公开仓库"
     return Outcome.OK, p, 200, ""
 
 

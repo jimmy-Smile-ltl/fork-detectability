@@ -219,6 +219,7 @@ def main() -> int:
     ctx.known_user_id = uid_map
 
     deadline = (time.time() + args.max_minutes * 60) if args.max_minutes else 0
+    el = 0.0
 
     def one_account2(lg: str) -> None:
         if deadline and time.time() > deadline:
@@ -245,12 +246,62 @@ def main() -> int:
 
     import threading
     lock = threading.Lock()
-    print(f"开始采详情：{len(logins):,} 人 × {len(dims)} 维度 | "
-          f"mode={args.mode} | 并发={args.workers}")
-    with ThreadPoolExecutor(max_workers=args.workers) as ex:
-        list(ex.map(one_account2, logins))
 
-    el = time.time() - t0
+    def do_dim(lg: str, dim: str) -> None:
+        """采集单元：某人的某一维度。**两种模式的唯一积木。**"""
+        w = col.writers[dim]
+        if w.done(lg):
+            return
+        rec = col._unit(dim, lg)
+        w.write(rec)
+        if dim == "D1" and rec.outcome == Outcome.OK.value:
+            uid = (rec.payload or {}).get("user_id")
+            if uid:
+                ctx.known_user_id[lg] = uid
+
+    print(f"开始采详情：{len(logins):,} 人 × {len(dims)} 维度 | "
+          f"mode={args.mode} | 并发={args.workers}", flush=True)
+
+    if args.mode == "per_dim":
+        # 一维采完再下一维：32 个 worker 全部服务同一个维度 → 通道打满
+        for dim in dims:
+            todo = col.writers[dim].pending(logins)
+            if not todo:
+                print(f"  {dim:4s} 已全部完成，跳过", flush=True)
+                continue
+            print(f"  {dim:4s} 待采 {len(todo):,}", flush=True)
+            n = {"c": 0}
+
+            def _w(lg, _dim=dim):
+                if deadline and time.time() > deadline:
+                    return
+                do_dim(lg, _dim)
+                with lock:
+                    n["c"] += 1
+
+            with ThreadPoolExecutor(max_workers=args.workers) as ex:
+                list(ex.map(_w, todo))
+            st = col.writers[dim].stats()
+            print(f"  {dim:4s} 完成 | {st}", flush=True)
+    else:
+        # 一人采完再下一个：**外层必须有线程池**，否则退化成单线程串行
+        cnt = {"c": 0}
+
+        def _one_account(lg: str) -> None:
+            if deadline and time.time() > deadline:
+                return
+            for dim in dims:                 # 该账号的 8 个维度依次采完
+                do_dim(lg, dim)
+            with lock:
+                cnt["c"] += 1
+                if cnt["c"] % 200 == 0:
+                    _el = max(time.time() - t0, 1e-9)
+                    print(f"  {cnt['c']:,}/{len(logins):,} | "
+                          f"{cnt['c']/_el*60:.0f} 人/分钟", flush=True)
+
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            list(ex.map(_one_account, logins))
+
     print(f"\n完成，用时 {el/60:.1f} 分钟")
     for d in dims:
         st = col.writers[d].stats()

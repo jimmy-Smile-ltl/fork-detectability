@@ -278,7 +278,7 @@ class Collector:
             if oc in TERMINAL:
                 return Record(login=login, dim=dim, outcome=oc.value, http=code,
                               attempt=attempt, payload=payload, note=note)
-            time.sleep(min(2 ** (attempt - 1), 8))     # 退避 1/2/4/8 秒
+            time.sleep(min(0.4 * (2 ** (attempt - 1)), 2.5))   # 退避 0.4/0.8/1.6/2.5 秒
         # 重试耗尽 → 记最后一次的 outcome（可重试态，下次启动会再试）
         return Record(login=login, dim=dim, outcome=oc.value, http=code,
                       attempt=self.max_retry, payload=payload,

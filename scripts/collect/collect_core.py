@@ -345,7 +345,7 @@ def load_account(tag: str, login: str, out_dir: str = "data/raw") -> dict:
         if not os.path.exists(path):
             continue
         best = None
-        for line in open(path, encoding="utf-8"):
+        for line in open(path, encoding="utf-8", errors="replace"):
             try:
                 r = json.loads(line)
             except (json.JSONDecodeError, UnicodeDecodeError):

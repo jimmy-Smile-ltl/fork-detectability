@@ -132,7 +132,7 @@ python scripts/figures/_plot_fork_timeline.py
 |---|---|---|:---:|---|---|
 | **fork** | `/repos/{o}/{r}/forks` | ✅ **200** | ✅ 200 | ✅ | fork 时间 + 最后 push |
 | **star** | `/repos/{o}/{r}/stargazers` | ❌ **401** | ✅ **200** | ✅ | `starred_at` |
-| **watch** | `/repos/{o}/{r}/subscribers` | ❌ **401** | ⚠️ 预期 200 | ✅ | 无 |
+| **watch** | `/repos/{o}/{r}/subscribers` | ❌ **401** | ✅ **预期可用**（未实测） | ✅ | 无 |
 
 匿名请求 star 名单的实际返回（2026-11-14 实测）：
 
@@ -141,7 +141,11 @@ HTTP 401  {"message":"Requires authentication"}
 X-RateLimit-Remaining: 59          ← 不是限流，是认证要求
 ```
 
-> ⚠️ **本项目 2026-11-10 的旧文档曾写"star 名单仅仓库所有者可读（404）"，那是错的。**
+> ⚠️ **注意：官方文档说这两个端点"can be used without authentication"，但实测是 401。**
+> 我们用**直连**与**隧道换 IP**两种出口各测一遍，都是 401 —— 排除了 IP 被封的解释。
+> **文档过时，以实测为准。**
+
+> ⚠️ **本项目 2026-11-10 的旧文档曾写"star 名单仅仓库所有者可读（404）"，那也是错的。**
 > 真实机制是"**需要认证**"——任何账号的 token 都能拉，不要求是所有者。
 > 所以 [`aegiswizard/fortune`](https://github.com/aegiswizard/fortune) 这类工具是可行的
 > （它要求用户提供 `GITHUB_TOKEN`）。

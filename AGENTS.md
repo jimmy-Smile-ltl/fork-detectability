@@ -174,3 +174,29 @@ proxies = {"http": url, "https": url}
 - 所有脚本用 `BASE = 项目根`（三级 `dirname`），`data/raw` 与 `data/out` 都基于它
 - 从项目根运行：`python scripts/analysis/_compute_all_features.py`
 - `scripts/legacy/` 里的脚本不再保证可用（依赖已废弃的 Clash 通道等）
+
+---
+
+## 八、采集结果九态（2026-11-14 新增，代码见 `scripts/collect/collect_core.py`）
+
+**禁止再用 `http=0` 表达"没采到"**——它同时代表网络失败、子资源全 404、解析失败三种情况。
+
+| Outcome | 含义 | 终态 | payload |
+|---|---|:---:|---|
+| `OK` | 200 且有内容 | ✅ | 数据 |
+| `EMPTY` | 资源存在但为空（0 仓/0 提交/409 空仓） | ✅ | **值 0** |
+| `DELETED` | **账号** 404（注销/封禁/改名） | ✅ | `None` |
+| `NOT_FOUND` | **子资源** 404（仓库删/改名/私有） | ✅ | `None` |
+| `PRIVATE` | 403 非配额 | ✅ | `None` |
+| `AUTH` | 401 | ✅ | `None` |
+| `RATE_LIMIT` | 403/429 配额 | ❌ 重试 | — |
+| `NETWORK` | 连接失败/超时/5xx | ❌ 重试 | — |
+| `BAD_RESPONSE` | 200 但解析失败 | ❌ 重试 | — |
+
+**三条硬规则**
+
+| 规则 | 说明 |
+|---|---|
+| **终态只采一次** | `OK/EMPTY/DELETED/NOT_FOUND/PRIVATE/AUTH` 记墓碑，重跑直接跳过 |
+| **`EMPTY` 是 0，`DELETED` 是 `None`** | 前者"确实没有"，后者"人不在了"，混成 0 会让零提交率失真 |
+| **写入优先级 `OK>EMPTY>终态>可重试`** | 一次成功后，后来的失败不得覆盖（D9 曾因此越补越低） |

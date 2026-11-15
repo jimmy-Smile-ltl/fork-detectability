@@ -1,0 +1,14 @@
+{
+  "_comment": "复制为 settings.json 并填入你自己的代理。settings.json 已 gitignore。",
+  "proxy_tunnel": {
+    "host": "proxy.example.com:8080",
+    "username": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD"
+  },
+  "collect": {
+    "workers_api": 16,
+    "workers_html": 2,
+    "timeout_sec": 15,
+    "max_retries": 4
+  }
+}

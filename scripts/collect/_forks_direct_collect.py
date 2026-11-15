@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """fork 名单采集器（**直连版**，不用代理）：全量 + 增量两种模式。
 
-为什么单独写一个：`_small_repo_collect.py` 走 Clash 节点池，节点全枯竭时它会"全池熔断"
+为什么单独写一个：`_small_repo_collect.py` 走代理节点池，节点全枯竭时它会"全池熔断"
 睡到最早解冻（最长 1 小时），而本机直连还有独立的 60/h 配额没被用掉。
 
 两种排序，用途完全不同：
@@ -16,7 +16,7 @@
       107,836 条 = 1,079 页 = **18 小时**；82,790 条 = 828 页 = **14 小时**。
       用 X-RateLimit-Reset 精确睡到窗口重置，不做无谓轮询。
 
-输出（与 Clash 版共用同一份文件与游标，两条路线可互切）：
+输出（与代理版共用同一份文件与游标，两条路线可互切）：
     data/raw/forks_all_{owner}__{repo}.jsonl
     data/raw/forks_all_{owner}__{repo}.page
     data/raw/forks_all_{owner}__{repo}.inc.json    增量水位（最近一次 success 的最大 created_at）

@@ -11,7 +11,7 @@
 
 用法：
     py _profile_atom.py --from-file data/raw/rea_forkers_priority.txt \
-        --out data/raw/atom_rea.jsonl --workers 8 --proxy http://127.0.0.1:7898
+        --out data/raw/atom_rea.jsonl --workers 8 --proxy http://your-proxy:8080
 """
 import argparse
 import json

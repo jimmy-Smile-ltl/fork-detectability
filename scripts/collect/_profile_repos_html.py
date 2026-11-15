@@ -4,7 +4,7 @@
 为什么需要：
   D8 走 api.github.com 要消耗 60/h 的 core 配额（19 万人 × 1-2 请求 ≈ 30 万请求 ≈ 90 小时）。
   而 `github.com/{login}?tab=repositories` 是**纯 HTML，0 API 配额**，
-  可以走 Clash 专用池（100 个节点），与 API 通道并行、互不挤占。
+  可以走代理池，与 API 通道并行、互不挤占。
 
 能拿到的字段（与 D8 对齐）：
   sampled_repos / fork_count / own_count / own_empty / has_profile_repo
@@ -18,7 +18,7 @@
 
 用法：
     py _profile_repos_html.py --from-file data/raw/openclaw_forkers_priority.txt \
-        --workers 6 --proxy http://127.0.0.1:7898 --out data/raw/repos_html_openclaw.jsonl
+        --workers 6 --proxy http://your-proxy:8080 --out data/raw/repos_html_openclaw.jsonl
 """
 import argparse
 import json

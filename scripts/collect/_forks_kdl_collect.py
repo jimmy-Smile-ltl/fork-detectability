@@ -2,9 +2,9 @@
 """快代理（KDL）版「全量 fork 名单」采集器 —— 按仓库，支持任意 owner/repo。
 
 定位：`_small_repo_collect.py --only forks` 的**代理加速版**。两者输出同一份文件、
-同一游标、同一去重键，可以随时来回切（今天走 KDL、明天走 Clash 都不会冲突）。
+同一游标、同一去重键，可以随时来回切（今天走隧道、明天走直连都不会冲突）。
 
-    data/raw/forks_all_{owner}__{repo}.jsonl    每行一个 fork（与 Clash 版字段一致）
+    data/raw/forks_all_{owner}__{repo}.jsonl    每行一个 fork（与代理版字段一致）
     data/raw/forks_all_{owner}__{repo}.page     游标 = 下一页页码
     data/raw/fork_owners_{owner}__{repo}.txt    去重后的 owner 名单
 

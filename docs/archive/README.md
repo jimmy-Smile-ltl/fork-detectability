@@ -36,7 +36,7 @@
 | [`account_manager/`](account_manager/) | GitHub 凭据：**只认当前环境变量**（不保存凭据文件）、配额跟踪、冷却恢复 |
 | [`crawler/`](crawler/) | 八类数据源采集 + 韧性传输 + 断点续爬 |
 | [`analysis/`](analysis/) | 指标计算、造假信号检测、对照组对比、报告生成 |
-| `config/` | `targets.json`（目标/对照组/采样参数，随仓库）+ `settings.json`（Clash 连接，gitignored） |
+| `config/` | `targets.json`（目标/对照组/采样参数，随仓库）+ `settings.json`（本机代理连接，gitignored） |
 | `data/` | 采集数据（gitignored）：`raw/*.jsonl` 原始归档 + `git_repo_fake.db` + `out/`（报告与图表）+ `state/`（配额状态，**不含凭据**） |
 | 根目录 `_*.py` | 独立采集器/抽样器/报告器（forker 全量画像、用户画像档位、S5 分层抽样等，各自可单跑） |
 | `_small_repo_collect.py` + `_repo_report.py` | **小仓库端到端闭环**：fork 少的仓几小时内完成「fork 全量 → owner 画像全量 → 单仓完整报告」（`py _repo_report.py --repo owner/repo`） |
@@ -70,16 +70,16 @@ py -m analysis.report --repo openclaw/openclaw
 
 ### （可选）代理节点池 —— 大批量匿名采集的加速档
 
-匿名配额按 IP 计（60 req/h/IP）。配了本地 [Clash/mihomo](https://github.com/MetaCubeX/mihomo)
+匿名配额按 IP 计（60 req/h/IP）。配了本地 HTTP 代理
 外部控制后，采集器可以在配额见底时自动切换策略组节点换出口 IP（实测 ~900-1,600 req/h，
 共享机场出口配额不可预期，轮换是常态）：
 
 ```bash
-# 复制模板并填写 clash 段（api_url / secret / group / proxy_port）
+# 复制模板并填写 proxy 段（host / username / password）
 copy config\settings.example.json config\settings.json
 
 # 之后所有 _*.py 采集器自动读取；也可用环境变量覆盖：
-#   CLASH_API_URL / CLASH_SECRET / CLASH_GROUP / CLASH_PROXY_PORT
+#   PROXY_API_URL / PROXY_SECRET / PROXY_GROUP / PROXY_PROXY_PORT
 ```
 
 > ⚠️ 代理轮换分摊匿名限流**默认不启用也不鼓励**——本项目历史上仅两次例外使用（均为
@@ -110,7 +110,7 @@ copy config\settings.example.json config\settings.json
 | 贡献者 | `/contributors` | ✅ **分页无上限** | **2,898** |
 | 提交历史 | `/commits` | ✅ | 112,682（contributors 口径） |
 | issue / PR / 评论 | `/issues` `/pulls` `/issues/comments` | ✅ | 9,366 open |
-| 用户画像 | `/users/{login}`（+ events/repos/starred/orgs 按档位组合） | ✅ | forker 全量 D1 采集中（82k，Clash 路线）；档位采集器已实现（4–10 req/人） |
+| 用户画像 | `/users/{login}`（+ events/repos/starred/orgs 按档位组合） | ✅ | forker 全量 D1 采集中（82k，本机代理路线）；档位采集器已实现（4–10 req/人） |
 | 生态趋势榜 | star-history.com 首页 | ✅ | 20 仓库 |
 
 > ⚠️ `/stargazers/history` **不是** 30 周滚动窗口 —— `?per_page` / `?weeks` / `?since`
@@ -203,7 +203,7 @@ curl_cffi 全档位被抑制时自动切 `requests` 直连兜底。
 > 账号路线（多账号池分摊）依旧禁止 —— 那会牵连真实账号。
 >
 > **代理路线第二例（2026-10-31）**：forker 主页全量画像（82,006 人 × 1 req D1）改走**本地
-> Clash 订阅节点池**（用户决策）。与 KDL 例同性质：匿名只读、不涉账号、零新增凭据（已有订阅）。
+> 本机代理订阅节点池**（用户决策）。与 KDL 例同性质：匿名只读、不涉账号、零新增凭据（已有订阅）。
 > 实现 = `_forker_profiles_all.py`（配额驱动轮换：读业务响应自身的 `X-RateLimit-Remaining`，
 > ≤3 即 PUT 换节点 ~0.2s；节点池含熔断冷却；实测 ~930 req/h，全量 ETA 2–5 天，
 > 断点续采随时可停可续）。连接参数在 `config/settings.json`（gitignored，
@@ -215,7 +215,7 @@ curl_cffi 全档位被抑制时自动切 `requests` 直连兜底。
 - 没有配置时，需要认证的阶段**跳过并告警**，不转匿名硬跑；
 - **禁止**多账号池分摊配额 —— 会触发账号关联封禁（含主账号）；
 - 代理轮换多 IP 分摊匿名限流：**默认禁止**，本项目仅两次例外（① 2026-10-24 fork 名单 822 页
-  走 KDL；② 2026-10-31 forker 主页 82k 走本地 Clash 节点池——均为用户决策，决策记录见上方
+  走 KDL；② 2026-10-31 forker 主页 82k 走本地 本机代理节点池——均为用户决策，决策记录见上方
   「请求配额与令牌」）—— 不作为可复用的常规手段；
 - 匿名采集产物（`data/raw/probe_forks_all.jsonl` 等）不含任何凭据。
 
@@ -279,7 +279,7 @@ CH 增量重查任务 #11 待批；1–6 月的结论不受影响。）
 ### 案例档案：数字登录名的「单动作」forker（2026-11-05 实测）
 
 `morluto/rea` 的 forks 列表从第 97 页起大批出现**纯数字登录名**，条目一律是
-`Created 2–3 weeks ago / Never updated / 0 0 0 0`。抽 5 个走公开 API 核实（Clash 节点池，只读 D1）：
+`Created 2–3 weeks ago / Never updated / 0 0 0 0`。抽 5 个走公开 API 核实（本机代理节点池，只读 D1）：
 
 | 样本 | 注册 | 显示名 | 公开仓 | 关注 | 登录名解码 | 除 fork 外的公开痕迹 |
 |---|---:|---|---:|---|---:|---|
@@ -359,7 +359,7 @@ CH 增量重查任务 #11 待批；1–6 月的结论不受影响。）
 2. ClickHouse star 身份导出 — 15 秒拿 10.7 万条
 3. star-history.com 曲线 + 趋势榜
 4. fork 名单 — 82,174 条 / 822 页（匿名 ≈13.7 小时；`py _forker_probe.py --stage forks-all` 可断点续跑）
-5. fork owner 主页画像全量 — 82,006 人 × 1 req（D1 档，Clash 节点池路线 ~930 req/h，
+5. fork owner 主页画像全量 — 82,006 人 × 1 req（D1 档，本机代理节点池路线 ~930 req/h，
    `py _forker_profiles_all.py` 后台长跑，断点续采）
 6. 用户画像深挖（D2–D8 按档位组合）— `_profile_tiers.py`：minimal 4 req/人 ·
    standard 5–7 · full 6–10；D1 自动复用全量采集缓存不重复花钱
@@ -379,7 +379,7 @@ CH 增量重查任务 #11 待批；1–6 月的结论不受影响。）
 | **P3** 全体 5%（`bucket(login, 20) == 0`） | ~5,300 | 抽样 | 整体分布的无偏估计 |
 | 贡献者 | 2,898 | **全采** | 协作结构分析主体 |
 | issue / PR / 评论作者 | 数千 | **全采** | 「参与讨论的账户」维度 |
-| fork owner（D1 档） | 82,006 | **全采中** | 总体号龄/粉丝分布（`_forker_profiles_all.py`，Clash 路线） |
+| fork owner（D1 档） | 82,006 | **全采中** | 总体号龄/粉丝分布（`_forker_profiles_all.py`，本机代理路线） |
 | **合计** | — | **~27,500 深挖 + 82k D1** | D1 全量后，S5 深挖档位（4–10 req/人）只需对可疑子群跑 |
 
 抽样**必须确定性**：用 `cityHash64(actor_login) % N = 0`（`users.bucket()`），

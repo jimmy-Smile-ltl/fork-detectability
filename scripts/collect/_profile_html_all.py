@@ -17,7 +17,7 @@
 
 用法：
     py _profile_html_all.py --from-file data/raw/rea_forkers_priority.txt \
-        --workers 10 --proxy http://127.0.0.1:7898 --out data/raw/profile_html_rea.jsonl
+        --workers 10 --proxy http://your-proxy:8080 --out data/raw/profile_html_rea.jsonl
 """
 import argparse
 import json

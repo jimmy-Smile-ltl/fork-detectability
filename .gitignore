@@ -1,6 +1,4 @@
-# ── 凭据（最高优先级，任何情况下不得提交）──────────────
-# tokens.json 已经不再被程序读取（凭据只认环境变量，见 account_manager/README.md），
-# 但这条规则**故意留着**：万一有人按旧习惯又建了一个，它不会被提交。
+# ── 凭据：任何情况下不得提交 ──────────────────────────
 tokens.json
 token_state.json
 .env
@@ -12,32 +10,26 @@ token_state.json
 credentials.json
 storage_state*.json
 
-# 本机连接配置（Clash API 地址/密钥/策略组，见 config/settings.example.json）
+# 本机连接配置（代理地址 / 凭据），见 config/settings.example.json
 config/settings.json
+data/proxy_kdl.json
+data/proxy_tunnel.json
 
-# ── 疑似刷量小号样本（本项目最高敏感度）──────────────────
-#   suspicious_accounts.json      —— 三个账号的登录密码 / 邮箱密码 / 令牌
-#   suspicious_accounts_login.md  —— 登录流程 + 两条令牌明文
-# 两者都含明文凭据，**绝不可提交**。用 *suspicious_* 前缀 + 目录内 *accounts* 双保险，
-# 将来再存别的账号包（.json / .md / .txt / .csv 都算）不必记得回来补规则。
-# ⚠️ *accounts* 不带扩展名 —— 别在 account_manager/ 里放叫 accounts*.py 的源码，
-#    会被一起忽略；真放了就补一行 !account_manager/accounts_xxx.py 例外。
+# 账号包（含明文凭据，绝不可提交）
 account_manager/suspicious_*
 account_manager/*accounts*
-
-# 同目录其它凭据文件。这里**故意限定扩展名**：不限定的话 *credentials* 会把
-# credentials.py（正经源码）一起忽略掉。
 account_manager/*credentials*.json
 account_manager/*credentials*.md
 account_manager/*credentials*.txt
 account_manager/*credentials*.csv
 
-# ── 采集数据（体积大、可重新生成）───────────────────────
+# ── 采集数据（体积大、可重新生成）──────────────────────
 data/
 
-# ── 运行产物 ────────────────────────────────────────────
+# ── 运行产物 ─────────────────────────────────────────
 logs/
 *.log
+*.err
 *.db
 *.db-journal
 *.sqlite
@@ -47,11 +39,18 @@ __pycache__/
 .venv/
 venv/
 
-# ── 编辑器 / 系统 ───────────────────────────────────────
+# ── 编辑器 / 系统 ────────────────────────────────────
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
 
-# ── 私有归档（含旧账号口令、旧爬虫、本机配置）──────────────────
+# ── 私有归档与内部规则 ────────────────────────────────
+# archive_private/：旧账号口令、旧爬虫、本机配置
+# AGENTS.md：含个人环境信息，不公开
 archive_private/
+AGENTS.md
+
+# ── 临时脚本 ─────────────────────────────────────────
+_tmp_*
+_dbg.py

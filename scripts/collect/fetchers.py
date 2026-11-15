@@ -387,9 +387,26 @@ def _d13(login: str, ctx: Ctx):
 
 # -- D14 头像类型 ------------------------------------------------------------
 def _d14(login: str, ctx: Ctx):
+    """头像类型。**缺 user_id 时自己补一次 /users 请求**，不依赖 D1 成功。
+
+    这是一个真实缺陷的修复：早期版本在 D1 失败时直接返回 BAD_RESPONSE，
+    导致 648–810 个头像记录被白白丢弃。
+    """
     uid = (ctx.known_user_id or {}).get(login.lower())
     if not uid:
-        return Outcome.BAD_RESPONSE, {}, None, "缺 user_id（需先跑 D1）"
+        r0 = cffi.get(f"{API}/users/{login}", headers=_api_headers(),
+                      proxies=ctx.proxies, timeout=ctx.timeout,
+                      impersonate="chrome")
+        if r0.status_code == 404:
+            return Outcome.DELETED, {}, 404, "账号不存在"
+        if r0.status_code == 200:
+            uid = (r0.json() or {}).get("id")
+            if uid:
+                if ctx.known_user_id is None:
+                    ctx.known_user_id = {}
+                ctx.known_user_id[login.lower()] = uid
+        if not uid:
+            return classify_http(r0.status_code), {}, r0.status_code, "取 user_id 失败"
     r = cffi.head(f"https://avatars.githubusercontent.com/u/{uid}",
                   params={"v": "4", "s": "460"},
                   headers={"User-Agent": "fork-study/1.0", "Connection": "close"},

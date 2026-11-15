@@ -61,7 +61,7 @@ REPOS = {
             "repo 明细": "repos_all_bettafish.jsonl",
         },
     },
-    "shardeum（造假对照）": {
+    "shardeum（A 组·外部研究疑似）": {
         "forks": "forks_all_shardeum__shardeum.jsonl",
         "dims": {
             "D1 档案": "profile_tier_screen_shardeum_all.jsonl",
@@ -74,7 +74,7 @@ REPOS = {
             "D15 主页": "profile_html_shardeum.jsonl",
         },
     },
-    "union（造假对照）": {
+    "union（A 组·外部研究疑似）": {
         "forks": "forks_all_unionlabs__union.jsonl",
         "dims": {
             "D1 档案": "profile_tier_screen_union_all.jsonl",
@@ -85,7 +85,7 @@ REPOS = {
             "D14 头像": "avatar_union.jsonl",
         },
     },
-    "anoma（造假对照）": {
+    "anoma（A 组·外部研究疑似）": {
         "forks": "forks_all_anoma__anoma.jsonl",
         "dims": {
             "D1 档案": "profile_tier_screen_anoma_all.jsonl",
@@ -96,7 +96,7 @@ REPOS = {
             "D14 头像": "avatar_anoma.jsonl",
         },
     },
-    "ollama（干净对照）": {
+    "ollama（B 组·无相关报道）": {
         "forks": "forks_all_ollama__ollama.jsonl",
         "dims": {
             "D1 档案": "profile_tier_screen_ollama_all.jsonl",
@@ -107,7 +107,7 @@ REPOS = {
             "D14 头像": "avatar_ollama.jsonl",
         },
     },
-    "langchain（干净对照）": {
+    "langchain（B 组·无相关报道）": {
         "forks": "forks_all_langchain-ai__langchain.jsonl",
         "dims": {
             "D1 档案": "profile_tier_screen_langchain_all.jsonl",

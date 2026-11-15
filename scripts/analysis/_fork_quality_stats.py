@@ -25,11 +25,11 @@ REPOS = [
     ("rea", "morluto__rea", "主题·中文历史地图"),
     ("openclaw", "openclaw__openclaw", "主题·AI 工具"),
     ("BettaFish", "666ghj__BettaFish", "测试·中文 AI"),
-    ("shardeum", "shardeum__shardeum", "对照·已知造假"),
-    ("union", "unionlabs__union", "对照·已知造假"),
-    ("anoma", "anoma__anoma", "对照·已知造假"),
-    ("ollama", "ollama__ollama", "对照·干净"),
-    ("langchain", "langchain-ai__langchain", "对照·干净"),
+    ("shardeum", "shardeum__shardeum", "对照·A 组"),
+    ("union", "unionlabs__union", "对照·A 组"),
+    ("anoma", "anoma__anoma", "对照·A 组"),
+    ("ollama", "ollama__ollama", "对照·B 组"),
+    ("langchain", "langchain-ai__langchain", "对照·B 组"),
 ]
 
 
@@ -248,8 +248,8 @@ def main() -> int:
         L.append(f"| **{tag}** | {a:.1f}% | {b2:.1f}% | {c:.1f}% | {d:.1f}% |")
 
     # ---------- 第四部分：判据区分度 ----------
-    L += ["", "## 三、判据区分度（造假组 vs 干净组）", "",
-          "| 判据 | 造假三仓均值 | 干净五仓均值 | 差值 | 是否分离 |",
+    L += ["", "## 三、判据区分度（A 组 vs B 组）", "",
+          "| 判据 | A 组三个仓均值 | B 组五个仓均值 | 差值 | 是否分离 |",
           "|---|---:|---:|---:|:---:|"]
     fake = [t for t in qs if t in ("shardeum", "union", "anoma")]
     clean = [t for t in qs if t in ("rea", "openclaw", "BettaFish", "ollama", "langchain")]
@@ -266,7 +266,7 @@ def main() -> int:
                  f"{cm:.1f}% ({min(cv):.1f}–{max(cv):.1f}) | {fm-cm:+.1f}pp | {sep} |")
 
     # 中位数类
-    L += ["", "| 判据(中位) | 造假三仓 | 干净五仓 | 是否分离 |", "|---|---|---|:---:|"]
+    L += ["", "| 判据(中位) | A 组三个仓 | B 组五个仓 | 是否分离 |", "|---|---|---|:---:|"]
     for k, name in (("commit_total", "提交数"), ("own_count", "自建仓数"),
                     ("acct_age_days", "账号年龄")):
         fv = [qs[t][k] for t in fake if qs[t].get(k) is not None]

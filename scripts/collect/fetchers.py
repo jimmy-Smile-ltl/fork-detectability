@@ -329,8 +329,11 @@ def _d9(login: str, ctx: Ctx):
     if repos is None:
         # 没缓存就现场取一次仓库页（per_account 模式下 D8H 通常已先跑）
         oc, p, code, note = _d8h(login, ctx)
-        if oc not in (Outcome.OK, Outcome.EMPTY):
+        # 只有"确实查不到人"才算终态；网络类失败才上抛
+        if oc in (Outcome.DELETED, Outcome.NOT_FOUND, Outcome.PRIVATE, Outcome.AUTH):
             return oc, {}, code, f"取仓库列表失败：{note}"
+        if oc not in (Outcome.OK, Outcome.EMPTY):
+            return Outcome.NETWORK, {}, code, f"取仓库列表失败：{note}"
         repos = [x["name"] for x in (p.get("own_details") or [])][: ctx.max_repos]
         _REPO_CACHE[login.lower()] = repos
     if not repos:

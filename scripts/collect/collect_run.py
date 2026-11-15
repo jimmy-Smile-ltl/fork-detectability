@@ -174,7 +174,15 @@ def main() -> int:
         logins = logins[: args.limit]
         print(f"按名单顺序取前 {len(logins):,} 人", flush=True)
 
-    dims = [d.strip() for d in args.dims.split(",") if d.strip()] or \
+    dims = [d.strip() for d in args.dims.split(",") if d.strip()]
+    if dims:
+        # 缺陷2 修复：--dims 是白名单，漏写会静默少采，必须显式告警
+        from collect_core import DIMS as _ALL_DIMS
+        _missing = [d for d in _ALL_DIMS if d not in dims]
+        if _missing:
+            print(f"⚠️  注意：本次未采集 {len(_missing)} 个维度 → {', '.join(_missing)}")
+            print("    （如需全量请去掉 --dims，或把维度补进列表）", flush=True)
+    dims = dims or \
         F.ORDER_PER_ACCOUNT
     _ = dims  # 提前定义，Collector 只加载这些维度
 

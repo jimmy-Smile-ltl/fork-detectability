@@ -89,6 +89,12 @@ def classify_http(code: Optional[int], body: Any = None,
         return Outcome.PRIVATE
     if code == 429:
         return Outcome.RATE_LIMIT
+    if code == 451:
+        # 法律限制（DMCA / 地区封锁）：重试永远不会成功，按终态处理
+        return Outcome.PRIVATE
+    if code in (301, 302, 307, 308):
+        # curl 默认跟随重定向；能走到这里说明跟随失败（多为仓已改名/删除）
+        return Outcome.NOT_FOUND
     if 500 <= code < 600:
         return Outcome.NETWORK        # 服务端错误，值得重试
     return Outcome.BAD_RESPONSE

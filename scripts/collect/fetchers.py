@@ -417,6 +417,21 @@ def _d15(login: str, ctx: Ctx):
     return Outcome.OK, p, 200, ""
 
 
+def _d6(login: str, ctx: Ctx):
+    """D6：组织列表（API）。D15 里 org 字段的可替代方案。"""
+    r = cffi.get(f"{API}/users/{login}/orgs",
+                 params={"per_page": 100}, headers=_api_headers(),
+                 proxies=ctx.proxies, timeout=ctx.timeout, impersonate="chrome")
+    if r.status_code == 404:
+        return Outcome.DELETED, {}, 404, "orgs 404"
+    if r.status_code != 200:
+        return classify_http(r.status_code), {}, r.status_code, ""
+    arr = r.json() or []
+    orgs = [x.get("login") for x in arr if isinstance(x, dict)]
+    return (Outcome.OK if orgs else Outcome.EMPTY), \
+        {"org_count": len(orgs), "orgs": orgs[:20]}, 200, ""
+
+
 def _d2b(login: str, ctx: Ctx):
     """D2B：API `/events/public` 取近 90 天事件（D13 的可靠替代）。
 
@@ -460,7 +475,7 @@ def _d2b(login: str, ctx: Ctx):
 
 
 _HANDLERS = {"D1": _d1, "D2": _d2, "D2B": _d2b, "D4L": _d4l, "D8H": _d8h,
-             "D9": _d9, "D13": _d13, "D14": _d14, "D15": _d15}
+             "D9": _d9, "D13": _d13, "D14": _d14, "D15": _d15, "D6": _d6}
 
 
 #: per_account 模式下的推荐顺序：先 D1（拿 user_id），再 D8H（D9 依赖），最后其余

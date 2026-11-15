@@ -245,6 +245,8 @@ DIMS: dict[str, DimSpec] = {
                    "avatar_{tag}.jsonl", "avatars HEAD，按字节判"),
     "D2B": DimSpec("D2B", "90天活动(API)", "api",  True, 3,
                    "events90_{tag}.jsonl", "/events/public，D13 的 API 替代"),
+    "D6":  DimSpec("D6",  "组织列表(API)",  "api",  True, 1,
+                   "orgs_{tag}.jsonl", "/orgs，D15 组织字段的替代"),
     "D15": DimSpec("D15", "主页画像",     "html", False, 1,
                    "profile_html_{tag}.jsonl", "/{login}，一次拿 7 字段"),
 }

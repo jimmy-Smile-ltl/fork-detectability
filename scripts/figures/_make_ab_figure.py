@@ -30,9 +30,11 @@ B = [("rea", "rea"), ("openclaw", "openclaw"), ("bettafish", "BettaFish"),
 
 # (列名, 显示名, 越高越像 A 组)
 JUDGES = [
+    ("has_pull_shark", "Pull Shark", False),
+    ("has_collab", "协作徽章", False),
     ("commit_zero", "零提交率", True),
-    ("has_own", "有自建仓", False),
     ("avatar_photo", "自传头像", False),
+    ("has_own", "有自建仓", False),
     ("followers_zero", "零粉丝", True),
     ("fork_touched", "fork 后动过", False),
 ]
@@ -56,8 +58,8 @@ def rate(rows, k):
 def main() -> int:
     data = {t: load(t) for t, _ in A + B}
 
-    fig, axes = plt.subplots(1, len(JUDGES), figsize=(4.6 * len(JUDGES), 5.6))
-    fig.suptitle("图 12｜A 组 vs B 组：6 条判据的分离度（★ = 零重叠）",
+    fig, axes = plt.subplots(1, len(JUDGES), figsize=(3.9 * len(JUDGES), 5.4))
+    fig.suptitle("图 12｜A 组 vs B 组：7 条判据的分离度（★ = 零重叠）",
                  fontsize=15, y=0.97)
 
     for ax, (col, name, higher_is_a) in zip(axes, JUDGES):

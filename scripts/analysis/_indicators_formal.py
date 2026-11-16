@@ -158,40 +158,32 @@ def main() -> int:
                      else f"| {tag} | {g} | — | {n:,} |")
         L.append("")
 
-    # ---------- 表 3：分离度汇总 ----------
-    L += ["## 分离度汇总（A 组 3 仓 vs B 组 2 仓）", "",
-          "**判据**：A 组三个仓的取值区间是否与 B 组两个仓**完全不重叠**。", "",
-          "| 指标 | A 组区间 | B 组区间 | 间距 | 判定 |", "|---|---:|---:|---:|:---:|"]
-    for col, name, _ in BIN:
-        av = [prop(data[t], col)[2] for t, _, g in REPOS if g == "A"]
-        bv = [prop(data[t], col)[2] for t, _, g in REPOS if g == "B"]
-        tv = [prop(data[t], col)[2] for t, _, g in REPOS if g == "theme"]
-        av = [v for v in av if v is not None]
-        bv = [v for v in bv if v is not None]
-        if len(av) < 2 or len(bv) < 2:
-            continue
-        sep = (min(av) > max(bv)) or (max(av) < min(bv))
-        gap = (min(av) - max(bv)) if min(av) > max(bv) else (min(bv) - max(av))
-        L.append(f"| **{name}** | {min(av):.1f}–{max(av):.1f}% | {min(bv):.1f}–{max(bv):.1f}% | "
-                 f"{gap:+.1f}pp | {'✅ 零重叠' if sep else '❌ 重叠'} |")
-    L.append("")
-    L.append("### 主题仓落在哪边")
-    L.append("")
-    L.append("| 指标 | 主题仓区间 | 更接近 |")
-    L.append("|---|---:|---|")
-    for col, name, _ in BIN:
-        av = [prop(data[t], col)[2] for t, _, g in REPOS if g == "A"]
-        bv = [prop(data[t], col)[2] for t, _, g in REPOS if g == "B"]
-        tv = [prop(data[t], col)[2] for t, _, g in REPOS if g == "theme"]
-        av = [v for v in av if v is not None]
-        bv = [v for v in bv if v is not None]
-        tv = [v for v in tv if v is not None]
-        if not (av and bv and tv):
-            continue
-        ca, cb = sum(av) / len(av), sum(bv) / len(bv)
-        ct = sum(tv) / len(tv)
-        near = "A 组" if abs(ct - ca) < abs(ct - cb) else "B 组"
-        L.append(f"| {name} | {min(tv):.1f}–{max(tv):.1f}% | **{near}** |")
+    # ---------- 表 3：分离度汇总（两种 B 组口径） ----------
+    L += ["## 分离度汇总（两种口径）", "",
+          "**口径 1（严格）**：B 组只取 2 个「无相关报道」的独立对照仓（ollama / langchain）",
+          "**口径 2（保守）**：B 组取全部 5 个「无相关报道」的仓（含 3 个主题仓）",
+          "",
+          "口径 2 更保守 —— 它不挑选「最干净的」对照，因此结论更稳。", ""]
+    for label, bset in (("口径 1：B = ollama + langchain", {"ollama", "langchain"}),
+                        ("口径 2：B = 全部 5 个无相关报道仓", {"rea", "openclaw", "bettafish",
+                                                              "ollama", "langchain"})):
+        L += [f"### {label}", "",
+              "| 指标 | A 组区间 | B 组区间 | 间距 | 判定 |", "|---|---:|---:|---:|:---:|"]
+        n_sep = 0
+        for col, name, _ in BIN:
+            av = [prop(data[t], col)[2] for t, _, g in REPOS if g == "A"]
+            bv = [prop(data[t], col)[2] for t, _, g in REPOS if t in bset]
+            av = [v for v in av if v is not None]
+            bv = [v for v in bv if v is not None]
+            if len(av) < 2 or len(bv) < 2:
+                continue
+            sep = (min(av) > max(bv)) or (max(av) < min(bv))
+            gap = (min(av) - max(bv)) if min(av) > max(bv) else (min(bv) - max(av))
+            if sep:
+                n_sep += 1
+            L.append(f"| **{name}** | {min(av):.1f}–{max(av):.1f}% | {min(bv):.1f}–{max(bv):.1f}% | "
+                     f"{gap:+.1f}pp | {'✅ 零重叠' if sep else '❌ 重叠'} |")
+        L += ["", f"**共 {n_sep} 条零重叠**", ""]
 
     os.makedirs(OUT, exist_ok=True)
     dst = os.path.join(OUT, "indicators_formal.md")

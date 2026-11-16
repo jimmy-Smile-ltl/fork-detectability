@@ -172,7 +172,7 @@ def main() -> int:
         n_sep = 0
         for col, name, _ in BIN:
             av = [prop(data[t], col)[2] for t, _, g in REPOS if g == "A"]
-            bv = [prop(data[t], col)[2] for t, _, g in REPOS if t in bset]
+            bv = [prop(data[t], col)[2] for t, _, g in REPOS if t.lower() in bset]
             av = [v for v in av if v is not None]
             bv = [v for v in bv if v is not None]
             if len(av) < 2 or len(bv) < 2:

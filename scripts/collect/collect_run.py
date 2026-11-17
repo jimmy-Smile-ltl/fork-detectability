@@ -134,6 +134,12 @@ def main() -> int:
     logins: list[str] = []
     complete = os.path.exists(lst_path + ".done")
     if complete:
+        if not os.path.exists(lst_path):
+            print(f"❌ fork 名单标记为完成但文件不存在：{lst_path}", file=sys.stderr)
+            print("   请重新采名单：", file=sys.stderr)
+            print(f"   python scripts/collect/collect_run.py --repo {args.repo} --list-only",
+                  file=sys.stderr)
+            return 2
         seen = set()
         for line in open(lst_path, encoding="utf-8"):
             try:

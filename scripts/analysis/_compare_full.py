@@ -27,9 +27,18 @@ CSV_TAGS = ["shardeum", "union", "anoma", "rea", "openclaw", "bettafish",
 
 
 def best_records(path: str) -> dict[str, dict]:
-    best: dict[str, dict] = {}
+    """按 login 聚合，**逐维度取最优**。
+
+    为什么不能只挑「维度最多的一条记录」：
+        单维补采（如 `--dims D15`）产生的记录只含 1 个维度，
+        按「维度数最多」挑选会把它整个丢掉，导致 D15 白采。
+        正确做法是每个维度各自取最好的一条，再拼起来。
+    """
+    PRI = {"OK": 5, "EMPTY": 4, "DELETED": 3, "NOT_FOUND": 3, "PRIVATE": 3,
+           "AUTH": 3, "NETWORK": 1, "RATE_LIMIT": 1, "BAD_RESPONSE": 1}
+    merged: dict[str, dict] = {}
     if not os.path.exists(path):
-        return best
+        return merged
     for line in open(path, encoding="utf-8", errors="replace"):
         try:
             r = json.loads(line)
@@ -38,15 +47,25 @@ def best_records(path: str) -> dict[str, dict]:
         lg = (r.get("login") or "").lower()
         if not lg:
             continue
-        os_ = r.get("outcomes", {})
-        api = {k: v for k, v in os_.items() if k not in HTML}
-        sc = sum(1 for v in api.values() if v in TERM)
-        cur = best.get(lg)
-        if cur is None or sc > cur["_s"]:
-            r["_s"] = sc
-            r["_n"] = len(api)
-            best[lg] = r
-    return best
+        cur = merged.get(lg)
+        if cur is None:
+            cur = {"login": lg, "outcomes": {}, "dims": {}, "_ts": 0}
+            merged[lg] = cur
+        for dim, oc in (r.get("outcomes") or {}).items():
+            old = cur["outcomes"].get(dim)
+            if old is None or PRI.get(oc, 0) > PRI.get(old, 0):
+                cur["outcomes"][dim] = oc
+                payload = (r.get("dims") or {}).get(dim)
+                if payload is not None:
+                    cur["dims"][dim] = payload
+        cur["_ts"] = max(cur["_ts"], r.get("ts") or 0)
+
+    # 统计每人的 API 维完成数（供 complete_only 用）
+    for rec in merged.values():
+        api = {k: v for k, v in rec["outcomes"].items() if k not in HTML}
+        rec["_n"] = len(api)
+        rec["_s"] = sum(1 for v in api.values() if v in TERM)
+    return merged
 
 
 def complete_only(recs: dict[str, dict]) -> list[dict]:
@@ -101,6 +120,8 @@ def profile_from_recs(recs: dict[str, dict]) -> dict:
     out["following_zero"], out["following_zero_n"] = v if v else (None, 0)
     v = pct_of("D15", lambda r: bool(g(r, "D15", "has_pull_shark")))
     out["pull_shark"], out["pull_shark_n"] = v if v else (None, 0)
+    v = pct_of("D15", lambda r: bool(g(r, "D15", "has_collab")))
+    out["has_collab"], out["has_collab_n"] = v if v else (None, 0)
 
     out["commit_total_med"], _ = med_of("D9", "commit_total")
     out["own_count_med"], _ = med_of("D8H", "own_count")
@@ -142,7 +163,8 @@ def from_csv(tag: str) -> dict:
             "avatar_photo": rate("avatar_photo"), "followers_zero": rate("followers_zero"),
             "following_zero": rate("following_zero"), "commit_total_med": med("commit_total"),
             "own_count_med": med("own_count"), "followers_med": med("followers"),
-            "acct_age_med": med("acct_age_days"), "pull_shark": rate("has_pull_shark")}
+            "acct_age_med": med("acct_age_days"), "pull_shark": rate("has_pull_shark"),
+            "has_collab": rate("has_collab")}
 
 
 def main() -> int:

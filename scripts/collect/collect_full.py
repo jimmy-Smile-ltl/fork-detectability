@@ -66,14 +66,27 @@ HTML_DIMS = {"D13", "D15"}
 TERMINAL = {"OK", "EMPTY", "DELETED", "NOT_FOUND", "PRIVATE", "AUTH"}
 
 
+def dims_complete(rec: dict, want: list[str] | None = None) -> bool:
+    """本次请求的维度是否全部拿到终态。
+
+    want=None 时退化为「除 HTML 维外全部终态」（旧行为）。
+    传入 want 后只检查这些维度 —— 否则 `--dims D15` 这种单维补采会把
+    所有 API 维已完成的人都跳过，白跑一趟。
+    """
+    os_ = rec.get("outcomes", {})
+    if want:
+        if not all(d in os_ for d in want):
+            return False
+        return all(os_[d] in TERMINAL for d in want)
+    return all(v in TERMINAL for k, v in os_.items() if k not in HTML_DIMS)
+
+
 def api_complete(rec: dict) -> bool:
-    """除 HTML 维外，全部拿到终态。"""
-    return all(v in TERMINAL for k, v in rec.get("outcomes", {}).items()
-               if k not in HTML_DIMS)
+    return dims_complete(rec, None)
 
 
-def load_done(path: str) -> set[str]:
-    """只把「API 维全部完成」的账号视为已完成，其余下次重跑。"""
+def load_done(path: str, want: list[str] | None = None) -> set[str]:
+    """只把「本次请求的维度全部完成」的账号视为已完成，其余下次重跑。"""
     if not os.path.exists(path):
         return set()
     done = set()
@@ -83,7 +96,7 @@ def load_done(path: str) -> set[str]:
         except Exception:
             continue
         lg = (r.get("login") or "").lower()
-        if lg and api_complete(r):
+        if lg and dims_complete(r, want):
             done.add(lg)
     return done
 
@@ -112,10 +125,11 @@ def best_per_login(path: str) -> dict[str, dict]:
 class CombinedWriter:
     """一人一行，只追加；失败自动重试，全部成功才认作完成。"""
 
-    def __init__(self, path: str, redo: bool = False):
+    def __init__(self, path: str, redo: bool = False, want: list[str] | None = None):
         self.path = path
+        self.want = want
         self.lock = threading.Lock()
-        self.done: set[str] = set() if redo else load_done(path)
+        self.done: set[str] = set() if redo else load_done(path, want)
         if redo and os.path.exists(path):
             os.remove(path)
 
@@ -124,7 +138,7 @@ class CombinedWriter:
             with open(self.path, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, ensure_ascii=False, separators=(",", ":")) + "\n")
             # 只有 API 维齐全才记「完成」，否则下次重跑会再来一次
-            if api_complete(rec):
+            if dims_complete(rec, self.want):
                 self.done.add(rec["login"])
 
     def pending(self, logins: list[str]) -> list[str]:
@@ -220,7 +234,7 @@ def main() -> int:
         print(f"按名单顺序取前 {len(logins):,} 人", flush=True)
 
     dst = os.path.join(RAW, f"accounts_full_{tag}.jsonl")
-    w = CombinedWriter(dst, redo=args.redo)
+    w = CombinedWriter(dst, redo=args.redo, want=order)
     todo = w.pending(logins)
     print(f"待采 {len(todo):,} 人 → {os.path.basename(dst)}", flush=True)
     if not todo:

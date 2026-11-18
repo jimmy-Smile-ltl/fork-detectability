@@ -24,35 +24,59 @@ FIGS = os.path.join(BASE, "figs")
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 
-A = [("shardeum", "shardeum"), ("union", "union"), ("anoma", "anoma")]
-B = [("rea", "rea"), ("openclaw", "openclaw"), ("bettafish", "BettaFish"),
-     ("ollama", "ollama"), ("langchain", "langchain")]
+# 4A / 4B（2026-11-18 终版）
+A = [("shardeum", "shardeum"), ("union", "union"), ("anoma", "anoma"),
+     ("nodejsargo", "nodejs-argo")]
+B = [("ollama", "ollama"), ("langchain", "langchain"),
+     ("frp", "frp"), ("agencyagents", "agency-agents")]
 
 # (列名, 显示名, 越高越像 A 组)
 JUDGES = [
-    ("has_pull_shark", "Pull Shark", False),
-    ("has_collab", "协作徽章", False),
-    ("commit_zero", "零提交率", True),
-    ("avatar_photo", "自传头像", False),
+    ("pull_shark", "Pull Shark", False),
     ("has_own", "有自建仓", False),
+    ("commit_zero", "零提交率", True),
+    ("has_collab", "协作徽章", False),
+    ("avatar_photo", "自传头像", False),
     ("followers_zero", "零粉丝", True),
     ("fork_touched", "fork 后动过", False),
 ]
 
 
 def load(tag):
-    p = os.path.join(OUT, f"features_{tag}.csv")
-    if not os.path.exists(p):
-        return []
-    with open(p, encoding="utf-8-sig", errors="replace") as fh:
-        return list(csv.DictReader(fh))
+    """返回画像 dict。新仓从「一人一条」合并档案算；其余从 features CSV 算。
+
+    `fork_touched` 不在 9 个维度里（来自 fork 名单），
+    对合并档案的仓单独从 features CSV 补这一列。
+    """
+    import importlib.util
+    cf_p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "analysis", "_compare_full.py")
+    spec = importlib.util.spec_from_file_location("cf", cf_p)
+    cf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cf)
+
+    full_p = os.path.join(BASE, "data", "raw", f"accounts_full_{tag}.jsonl")
+    if os.path.exists(full_p):
+        prof = cf.profile_from_recs(cf.best_records(full_p))
+    else:
+        prof = cf.from_csv(tag)
+
+    # fork_touched 兜底：从 features CSV 取
+    if prof.get("fork_touched") is None:
+        csv_p = os.path.join(OUT, f"features_{tag}.csv")
+        if os.path.exists(csv_p):
+            with open(csv_p, encoding="utf-8-sig", errors="replace") as fh:
+                rows = list(csv.DictReader(fh))
+            x = [r for r in rows if r.get("fork_touched") not in (None, "")]
+            if x:
+                prof["fork_touched"] = (sum(1 for r in x if str(r["fork_touched"]) == "1")
+                                        / len(x) * 100)
+    return prof
 
 
-def rate(rows, k):
-    x = [r for r in rows if r.get(k) not in (None, "")]
-    if not x:
-        return None
-    return sum(1 for r in x if str(r[k]) == "1") / len(x) * 100
+def rate(prof, k):
+    v = prof.get(k)
+    return v if isinstance(v, (int, float)) else None
 
 
 def main() -> int:

@@ -49,6 +49,8 @@
 | [指标设计清单](method/指标设计清单.md) | 判据设计 + 实测结果 |
 | [图表与报告生成](method/图表与报告生成.md) | 出图与报告管线 |
 
+> 结论图：[判据分离度](../../figs/21_ab_separation.png) · [判据衰减曲线](../../figs/23_judge_decay.png) · [留出验证](../../figs/22_out_of_sample_validation.png)
+
 ## selection/ — 如何选样本
 
 | 文档 | 内容 |

@@ -11,13 +11,13 @@
 
 **文档索引**
 
-> 📘 **主文档：[`项目总纲.md`](项目总纲.md)** —— 2026-11-09 合并了下列 9 份文档的最新内容，
+> 📘 **主文档：[`项目总纲.md`](../history/项目总纲.md)** —— 2026-11-09 合并了下列 9 份文档的最新内容，
 > 含方法论、采集单元、指标、已验证/已证伪结论、当前进度。**先读这一份。**
 > 下列分册保留作历史归档，内容可能与总纲不一致。
 
 | 文档 | 内容 |
 |---|---|
-| [`项目总纲.md`](项目总纲.md) | ⭐ **唯一权威版本**：合并全部内容 + 最新结论 |
+| [`项目总纲.md`](../history/项目总纲.md) | ⭐ **唯一权威版本**：合并全部内容 + 最新结论 |
 | [`数据采集方案.md`](数据采集方案.md) | 归档：通道实测、信号↔数据映射、配额预算 |
 | [`账户采集方案.md`](账户采集方案.md) | 归档：12 个端点字段级指南 |
 | [`账户分析方案.md`](账户分析方案.md) | 归档：字段 → 指标 → 两轴分层 |
@@ -89,7 +89,7 @@ copy config\settings.example.json config\settings.json
 > ⚠️ **凭据只认当前环境变量，不读任何保存的令牌文件。**
 > 没有配置时，需要凭据的阶段（`forks` / `commits` / `issues` / `users` 等）
 > 会被**跳过并告警**，只跑 `meta` / `history` / `ch` / `sh` —— 不转匿名硬跑。
-> 理由见 [`account_manager/README.md`](account_manager/README.md)。
+> 理由见 `account_manager/README.md`。
 
 > ⚠️ Windows 下 PATH 里的 `python` 是 Microsoft Store 存根（静默失败、退出码 49），
 > 一律用 `py` 启动器。
@@ -115,7 +115,7 @@ copy config\settings.example.json config\settings.json
 
 > ⚠️ `/stargazers/history` **不是** 30 周滚动窗口 —— `?per_page` / `?weeks` / `?since`
 > **全部被忽略**（静默返回第 1 页），只有 `?page=N` 生效。翻到底即全生命周期。
-> 另：`total` 字段是**当周新增**而非累计值。详见 [`crawler/README.md`](crawler/README.md)。
+> 另：`total` 字段是**当周新增**而非累计值。详见 `crawler/README.md`。
 
 ### 仓库改名史（决定 star 身份如何拼接）
 
@@ -366,7 +366,7 @@ CH 增量重查任务 #11 待批；1–6 月的结论不受影响。）
 7. 贡献者 / 提交历史 — 113k
 8. issue / PR / 评论
 
-> 详见 [`crawler/README.md`](crawler/README.md) —— 含韧性传输层、三层失败分离、
+> 详见 `crawler/README.md` —— 含韧性传输层、三层失败分离、
 > TLS 指纹轮换、以及 `/stargazers/history` 与 `/contributors` 的几个反直觉行为。
 
 ## 用户画像分层采样
@@ -399,7 +399,7 @@ login，`#` 注释），存在则自动并入 P4 层——**不入公开仓库**
 ## 分析层
 
 指标计算、14 条信号检测、对照组标定、报告生成 —— 详见
-[`analysis/README.md`](analysis/README.md)。
+`analysis/README.md`。
 
 ```bash
 py -m analysis.report                    # 出报告 → data/out/

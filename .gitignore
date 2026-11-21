@@ -24,7 +24,7 @@ account_manager/*credentials*.txt
 account_manager/*credentials*.csv
 
 # ── 采集数据（体积大、可重新生成）──────────────────────
-data/
+/data/
 
 # ── 运行产物 ─────────────────────────────────────────
 logs/

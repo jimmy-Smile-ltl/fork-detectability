@@ -17,8 +17,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(BASE, "figs")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import FIG  # noqa: E402
 
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -96,7 +96,7 @@ def main() -> int:
     ax.set_xlim(-0.35, len(STAGES) - 0.55)
     ax.grid(axis="y", alpha=0.3)
 
-    ax.set_title("图 14 ｜ 每加一个干净对照，判据就弱一分",
+    ax.set_title("图 23 ｜ 每加一个干净对照，判据就弱一分",
                  fontsize=15, pad=16)
 
     # 两次关键事件注解
@@ -120,7 +120,7 @@ def main() -> int:
              ha="center", fontsize=8.5, color="#666")
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
-    p = os.path.join(OUT, "23_judge_decay.png")
+    p = os.path.join(FIG, "23_judge_decay.png")
     fig.savefig(p, dpi=170)
     print(f"→ {p}")
 

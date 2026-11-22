@@ -16,8 +16,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(BASE, "figs")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import FIG  # noqa: E402
 
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 plt.rcParams["axes.unicode_minus"] = False
@@ -99,10 +99,10 @@ def main() -> int:
     ax2.legend(fontsize=9)
     ax2.grid(axis="y", alpha=0.3)
 
-    fig.suptitle("图 13 ｜ watchers/★ 不能区分 A/B（左）；dsh 的具体先验被证实（右）",
+    fig.suptitle("图 22 ｜ watchers/★ 不能区分 A/B（左）；dsh 的具体先验被证实（右）",
                  fontsize=14, y=0.99)
     fig.tight_layout(rect=(0, 0, 1, 0.96))
-    p = os.path.join(OUT, "22_out_of_sample_validation.png")
+    p = os.path.join(FIG, "22_out_of_sample_validation.png")
     fig.savefig(p, dpi=170)
     print(f"→ {p}")
 

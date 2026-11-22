@@ -7,16 +7,13 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import statistics
 import sys
-from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-RAW = os.path.join(BASE, "data", "raw")
-OUT = os.path.join(BASE, "data", "out")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import OUT, RAW, iter_jsonl  # noqa: E402
 
 HTML = {"D13", "D15"}
 TERM = {"OK", "EMPTY", "DELETED", "NOT_FOUND", "PRIVATE", "AUTH"}
@@ -37,13 +34,7 @@ def best_records(path: str) -> dict[str, dict]:
     PRI = {"OK": 5, "EMPTY": 4, "DELETED": 3, "NOT_FOUND": 3, "PRIVATE": 3,
            "AUTH": 3, "NETWORK": 1, "RATE_LIMIT": 1, "BAD_RESPONSE": 1}
     merged: dict[str, dict] = {}
-    if not os.path.exists(path):
-        return merged
-    for line in open(path, encoding="utf-8", errors="replace"):
-        try:
-            r = json.loads(line)
-        except Exception:
-            continue
+    for r in iter_jsonl(path):
         lg = (r.get("login") or "").lower()
         if not lg:
             continue

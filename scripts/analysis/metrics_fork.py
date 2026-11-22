@@ -23,7 +23,6 @@
 """
 import argparse
 import datetime
-import json
 import math
 import os
 import re
@@ -35,9 +34,8 @@ try:
 except Exception:
     pass
 
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-RAW = os.path.join(BASE, "data", "raw")
-OUT = os.path.join(BASE, "data", "out")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import OUT, RAW, iter_jsonl  # noqa: E402
 
 SPEC_VERSION = "v1"
 BURST_WINDOW_H = 3          # 爆发窗宽度（小时）
@@ -48,20 +46,8 @@ CLUSTER_GAP_S = 60          # TS-cluster：互差 <60s 视为同批命名
 
 # ── 基础 ────────────────────────────────────────────────
 def load_forks(path):
-    rows = []
-    if not os.path.exists(path):
-        return rows
-    for line in open(path, encoding="utf-8"):
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            r = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if r.get("login") and r.get("fork_created_at"):
-            rows.append(r)
-    return rows
+    return [r for r in iter_jsonl(path)
+            if r.get("login") and r.get("fork_created_at")]
 
 
 def iso_ts(s):

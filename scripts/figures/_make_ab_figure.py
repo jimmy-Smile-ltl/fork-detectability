@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""图 12：A/B 组判据分离度（最终结论图）。
+"""图 21：A/B 组判据分离度（最终结论图）。
 
     python scripts/figures/_make_ab_figure.py
 
@@ -17,9 +17,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(BASE, "data", "out")
-FIGS = os.path.join(BASE, "figs")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import BASE, OUT, FIG  # noqa: E402
 
 matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
@@ -83,7 +82,7 @@ def main() -> int:
     data = {t: load(t) for t, _ in A + B}
 
     fig, axes = plt.subplots(1, len(JUDGES), figsize=(3.9 * len(JUDGES), 5.4))
-    fig.suptitle("图 12｜A 组 vs B 组：7 条判据的分离度（★ = 零重叠）",
+    fig.suptitle("图 21｜A 组 vs B 组：7 条判据的分离度（★ = 零重叠）",
                  fontsize=15, y=0.97)
 
     for ax, (col, name, higher_is_a) in zip(axes, JUDGES):
@@ -145,8 +144,8 @@ def main() -> int:
 
     axes[0].legend(loc="upper left", fontsize=9, framealpha=0.9)
     plt.tight_layout(rect=[0, 0, 1, 0.94])
-    dst = os.path.join(FIGS, "21_ab_separation.png")
-    os.makedirs(FIGS, exist_ok=True)
+    dst = os.path.join(FIG, "21_ab_separation.png")
+    os.makedirs(FIG, exist_ok=True)
     plt.savefig(dst, dpi=155, bbox_inches="tight", facecolor="white")
     plt.close()
     print(f"→ {dst}")

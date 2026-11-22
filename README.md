@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](requirements.txt)
-[![Docs](https://img.shields.io/badge/docs-24%20%E4%BB%BD-informational)](docs/README.md)
+[![Docs](https://img.shields.io/badge/docs-41%20%E4%BB%BD-informational)](docs/README.md)
 
 <div align="center">
 
@@ -231,7 +231,8 @@ docs/
 ```
 
 ```
-scripts/
+scripts/          59 个 .py，完整地图见 [scripts/README](scripts/README.md)
+├── common.py    共用路径 / JSONL / 百分比
 ├── collect/    collect_core（九态）· fetchers · collect_full（一人一条）· _full_run
 ├── analysis/   _compare_full（逐维度合并 + 每指标自己的分母）
 ├── figures/    结论图 · 验证图
@@ -239,6 +240,9 @@ scripts/
 
 figs/            18 张图，索引见 [figs/README](figs/README.md)
 ```
+
+**每个脚本的定位、入口与产物见 [scripts/README](scripts/README.md)**——
+包括「我想做什么 → 跑哪个」速查表、数据流，以及一次性脚本与正式入口的区分。
 
 **三个踩过坑才加上的实现细节**（都在[数据结构设计](docs/data/数据结构设计.md)里有解释）：
 

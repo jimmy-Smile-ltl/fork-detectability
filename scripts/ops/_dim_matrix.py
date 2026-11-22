@@ -10,13 +10,12 @@
 """
 from __future__ import annotations
 
-import json
 import os
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-RAW = os.path.join(BASE, "data", "raw")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import RAW, iter_jsonl  # noqa: E402
 
 TERM = {"OK", "EMPTY", "DELETED", "NOT_FOUND", "PRIVATE", "AUTH"}
 
@@ -76,11 +75,7 @@ def count_per_dim(tag: str, dim: str) -> int:
     if not os.path.exists(p):
         return 0
     seen = set()
-    for line in open(p, encoding="utf-8", errors="replace"):
-        try:
-            r = json.loads(line)
-        except Exception:
-            continue
+    for r in iter_jsonl(p):
         if usable(r):
             lg = (r.get("login") or "").lower()
             if lg:
@@ -94,11 +89,7 @@ def count_combined(tag: str) -> dict[str, int]:
     if not os.path.exists(p):
         return out
     seen: dict[str, set] = {d: set() for d in DIMS}
-    for line in open(p, encoding="utf-8", errors="replace"):
-        try:
-            r = json.loads(line)
-        except Exception:
-            continue
+    for r in iter_jsonl(p):
         lg = (r.get("login") or "").lower()
         if not lg:
             continue
@@ -128,11 +119,7 @@ def main() -> int:
         cf = os.path.join(RAW, f"accounts_full_{tag}.jsonl")
         uniq = set()
         if os.path.exists(cf):
-            for line in open(cf, encoding="utf-8", errors="replace"):
-                try:
-                    r = json.loads(line)
-                except Exception:
-                    continue
+            for r in iter_jsonl(cf):
                 lg = (r.get("login") or "").lower()
                 if lg:
                     uniq.add(lg)

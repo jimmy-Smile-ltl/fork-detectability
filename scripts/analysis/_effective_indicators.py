@@ -10,16 +10,14 @@
 用法：py _effective_indicators.py
 """
 import csv
-import json
 import math
 import os
 import sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-RAW = os.path.join(BASE, "data", "raw")
-OUT = os.path.join(BASE, "data", "out")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import OUT, RAW, iter_jsonl  # noqa: E402
 
 SPECS = {
     "rea": ("forks_all_morluto__rea.jsonl", "features_rea.csv", "morluto/rea"),
@@ -43,11 +41,7 @@ def burst_hours(fork_file):
     """逐小时分桶 → 滚动 3h > μ+2σ 的小时集合（与 metrics_fork.py 同参数）。"""
     from datetime import datetime, timezone
     ts = []
-    for line in open(os.path.join(RAW, fork_file), encoding="utf-8"):
-        try:
-            r = json.loads(line)
-        except json.JSONDecodeError:
-            continue
+    for r in iter_jsonl(os.path.join(RAW, fork_file)):
         s = r.get("fork_created_at") or ""
         if not s:
             continue

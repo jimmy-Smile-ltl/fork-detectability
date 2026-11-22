@@ -86,7 +86,7 @@
 
 ---
 
-## 三、fork 时间线（三张，早期形态分析）
+## 三、fork 时间线（四张，早期形态分析）
 
 | 图 | 内容 |
 |---|---|
@@ -108,13 +108,13 @@
 ```bash
 python scripts/figures/_make_figures.py              # 10–17, 20
 python scripts/figures/_make_time_control_figures.py # 18–19
-python scripts/figures/_plot_fork_timeline.py        # 时间线 3 张
+python scripts/figures/_plot_fork_timeline.py        # 时间线 4 张
 python scripts/figures/_make_ab_figure.py            # 21 结论图
 python scripts/figures/_make_validation_figure.py    # 22 留出验证
 python scripts/figures/_make_decay_figure.py         # 23 衰减曲线
 ```
 
-**注意**：前五组脚本依赖 `data/` 里的原始数据（未入库），
+**注意**：前三组脚本依赖 `data/` 里的原始数据（未入库），
 所以**克隆本仓库后只有 21/22/23 三张结论图能重生成**
 （它们的数据来自已发布的统计口径）。其余图需先跑完采集。
 

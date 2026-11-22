@@ -13,8 +13,8 @@ import os
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-OUT = os.path.join(BASE, "data", "out")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from common import OUT  # noqa: E402
 
 # 仓库 → (标签, 特征文件名, 分组)
 REPOS = [

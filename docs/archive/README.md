@@ -46,7 +46,7 @@
 | `data/` | 采集数据（gitignored）：`raw/*.jsonl` 原始归档 + `git_repo_fake.db` + `out/`（报告与图表）+ `state/`（配额状态，**不含凭据**） |
 | 根目录 `_*.py` | 独立采集器/抽样器/报告器（forker 全量画像、用户画像档位、S5 分层抽样等，各自可单跑） |
 | `_small_repo_collect.py` + `_repo_report.py` | **小仓库端到端闭环**：fork 少的仓几小时内完成「fork 全量 → owner 画像全量 → 单仓完整报告」（`py _repo_report.py --repo owner/repo`） |
-| 根目录一次性探针 | `_star_probe` / `_detail_probe` / `_repo_detail` / `_token_check` / `_token_endpoints` / `_test_partial_week` / `_reconcile_live` / `_user_pilot` —— **研究过程的验证脚本**（通道可用性实测、端点权限、token 通道死因等），保留作留档，日常分析用不到 |
+| 根目录一次性探针 | `_star_probe` / `_detail_probe` / `_repo_detail` / `_token_check` / `_token_endpoints` / `_test_partial_week` / `_user_pilot` —— **研究过程的验证脚本**（通道可用性实测、端点权限、token 通道死因等），保留作留档，日常分析用不到。<br>`_reconcile_live` 依赖私有 `crawler` 包，已从开源版移除（可从 git 历史找回） |
 
 ---
 
